@@ -10,3 +10,12 @@ Temp
 !QualitySettings.asset
 !TagManager.asset
 !TimeManager.asset
+
+build
+
+*.csproj
+*.pidb
+*.unityproj
+*.sln
+*.userprefs
+
