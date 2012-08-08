@@ -6,10 +6,11 @@ function Start() {
 	skin = Instantiate(skin) as GUISkin;
 	skin.font = Screen.width < 500 ? fontLoRes : fontHiRes;
 	
-	StoreKit.Install("jp.radiumsoftware.iaptest");
+	StoreKit.GetInstance().Install();
 }
 
 function Update() {
+	/*
 	var coin = SecureData.GetInt("Coin");
 	if (StoreKit.ConsumeProduct("coin1")) {
 		SecureData.SetInt("Coin", coin + 1000);
@@ -27,12 +28,13 @@ function Update() {
 		SecureData.SetBool("UnlockLevelY", true);
 		SecureData.Flush();
 	}
+	*/
 }
 
 function OnGUI() {
-	if (!StoreKit.isAvailable) return;
+	if (!StoreKit.GetInstance().isAvailable) return;
 	
-	var deactivated = StoreKit.isProcessing;
+	var deactivated = StoreKit.GetInstance().isProcessing;
 	
 	GUI.skin = skin;
 	GUI.color = Color(1, 1, 1, deactivated ? 0.2 : 1.0);
@@ -61,15 +63,15 @@ function OnGUI() {
 	GUILayout.Label("Buy coins:");
 
 	if (GUILayout.Button("1,000 coin pack") && !deactivated) {
-		StoreKit.Buy("coin1");
+		StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier1");
 	}
 
 	if (GUILayout.Button("2,500 coin pack") && !deactivated) {
-		StoreKit.Buy("coin2");
+		StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier1");
 	}
 	
 	if (GUILayout.Button("4,000 coin pack") && !deactivated) {
-		StoreKit.Buy("coin3");
+		StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier1");
 	}
 	
 	if (!levelX || !levelY) {
@@ -78,11 +80,11 @@ function OnGUI() {
 		GUILayout.Label("Buy additional levels:");
 	
 		if (!levelX && GUILayout.Button("Unlock level X") && !deactivated) {
-			StoreKit.Buy("levelx");
+			StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier1");
 		}
 	
 		if (!levelY && GUILayout.Button("Unlock level Y") && !deactivated) {
-			StoreKit.Buy("levely");
+			StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier1");
 		}
 	}
 

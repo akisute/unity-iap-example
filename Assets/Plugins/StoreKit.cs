@@ -2,11 +2,36 @@ using UnityEngine;
 using System.Collections;
 using System.Runtime.InteropServices;
 
-public static class StoreKit {
+
+public class StoreKit : MonoBehaviour
+{
+	//////////////////////////////////////////////////////////////////////////
+	// Init/dealloc
+	//////////////////////////////////////////////////////////////////////////
 	
-	static string productIdPrefix_;
+	private static StoreKit instance = null;
 	
-	public static bool isAvailable {
+	public static StoreKit GetInstance()
+	{
+		if (instance == null) {
+			GameObject obj = new GameObject("StoreKit");
+			instance = obj.AddComponent<StoreKit>();
+		}
+		return instance;
+	}
+	
+	void Awake()
+	{
+		DontDestroyOnLoad(gameObject);
+		Install();
+	}
+	
+	//////////////////////////////////////////////////////////////////////////
+	// Properties
+	//////////////////////////////////////////////////////////////////////////
+	
+	public bool isAvailable
+	{
 		get {
 			#if UNITY_IPHONE && !UNITY_EDITOR
 				return _StoreKitIsAvailable();
@@ -16,7 +41,8 @@ public static class StoreKit {
 		}
 	}
 
-	public static bool isProcessing {
+	public bool isProcessing
+	{
 		get {
 			#if UNITY_IPHONE && !UNITY_EDITOR
 				return _StoreKitIsProcessing();
@@ -26,50 +52,96 @@ public static class StoreKit {
 		}
 	}
 	
-	private static string GetPrefKey(string productName) {
-		return productIdPrefix_ + "." + productName;
+	//////////////////////////////////////////////////////////////////////////
+	// Querying purchased receipts
+	//////////////////////////////////////////////////////////////////////////
+	
+	private static string GetReceiptsPrefsKey(string productIdentifier)
+	{
+		return string.Format("StoreKitReceipts-{0}", productIdentifier);
 	}
 	
-	public static bool HasProduct(string productName) {
-		return PlayerPrefs.GetInt(GetPrefKey(productName)) > 0;
+	public bool HasProductReceipts(string productIdentifier)
+	{
+		string receiptBase64CommaDelimitedString = PlayerPrefs.GetString(GetReceiptsPrefsKey(productIdentifier), null);
+		return !string.IsNullOrEmpty(receiptBase64CommaDelimitedString);
 	}
 	
-	public static bool ConsumeProduct(string productName) {
-		string key = GetPrefKey(productName);
-		int current = PlayerPrefs.GetInt(key);
-		if (current > 0) {
-			PlayerPrefs.SetInt(key, current - 1);
+	public string[] GetProductReceipts(string productIdentifier)
+	{
+		string receiptBase64CommaDelimitedString = PlayerPrefs.GetString(GetReceiptsPrefsKey(productIdentifier), null);
+		if (string.IsNullOrEmpty(receiptBase64CommaDelimitedString)) {
+			return new string[0];
+		}
+		
+		string[] receiptBase64Strings = receiptBase64CommaDelimitedString.Split(new char[]{','});
+		return receiptBase64Strings;
+	}
+	
+	public string GetFirstProductReceipt(string productIdentifier)
+	{
+		string[] receiptBase64Strings = GetProductReceipts(productIdentifier);
+		if (receiptBase64Strings.Length > 0) {
+			return receiptBase64Strings[0];
+		} else {
+			return null;
+		}
+	}
+	
+	public bool ConsumeFirstProductReceipt(string productIdentifier)
+	{
+		string[] receiptBase64Strings = GetProductReceipts(productIdentifier);
+		if (receiptBase64Strings.Length > 1) {
+			string[] consumedReceiptBase64Strings = new string[receiptBase64Strings.Length-1];
+			System.Array.Copy(receiptBase64Strings, 1, consumedReceiptBase64Strings, 0, receiptBase64Strings.Length-1);
+			PlayerPrefs.SetString(GetReceiptsPrefsKey(productIdentifier), string.Join(",", consumedReceiptBase64Strings));
+			PlayerPrefs.Save();
+			return true;
+		} else if (receiptBase64Strings.Length == 1) {
+			PlayerPrefs.SetString(GetReceiptsPrefsKey(productIdentifier), "");
 			PlayerPrefs.Save();
 			return true;
 		} else {
 			return false;
 		}
 	}
-
-	public static void Install(string productIdPrefix) {
-		productIdPrefix_ = productIdPrefix;
+	
+	//////////////////////////////////////////////////////////////////////////
+	// Public API
+	//////////////////////////////////////////////////////////////////////////
+	
+	public void Install()
+	{
 		#if UNITY_IPHONE && !UNITY_EDITOR
-			_StoreKitInstall(productIdPrefix);
+			_StoreKitInstall();
 		#endif
 	}
 	
-	public static void Buy(string productName) {
+	public void Buy(string productIdentifier)
+	{
 		#if UNITY_IPHONE && !UNITY_EDITOR
 			_StoreKitBuy(productName);
 		#else
-			string id = productIdPrefix_ + "." + productName;
-			PlayerPrefs.SetInt(id, PlayerPrefs.GetInt(id) + 1);
+			const string DummyReceiptBase64String = "thisisdummyreceiptbase64string";
+			string[] receiptBase64Strings = GetProductReceipts(productIdentifier);
+			ArrayList buffer = new ArrayList(receiptBase64Strings);
+			buffer.Add(DummyReceiptBase64String);
+			receiptBase64Strings = (string[])buffer.ToArray(typeof(string));
+			PlayerPrefs.SetString(GetReceiptsPrefsKey(productIdentifier), string.Join(",", receiptBase64Strings));
+			PlayerPrefs.Save();
 		#endif
 	}
 	
-	public static void RequestProductPriceString(string[] productIdentifiers) {
+	public void RequestProductPriceString(string[] productIdentifiers)
+	{
 		#if UNITY_IPHONE && !UNITY_EDITOR
 			_StoreKitRequestProductPriceString(productIdentifiers);
 		#else
 		#endif
 	}
 	
-	public static void RequestProductPriceLocalizedString(string[] productIdentifiers) {
+	public void RequestProductPriceLocalizedString(string[] productIdentifiers)
+	{
 		#if UNITY_IPHONE && !UNITY_EDITOR
 			_StoreKitRequestProductPriceLocalizedString(productIdentifiers);
 		#else
@@ -77,9 +149,9 @@ public static class StoreKit {
 	}
 	
 	#if UNITY_IPHONE
-
+	
 	[DllImport ("__Internal")]
-	private static extern void _StoreKitInstall(string productIdPrefix);
+	private static extern void _StoreKitInstall();
 	[DllImport ("__Internal")]
 	private static extern bool _StoreKitIsAvailable();
 	[DllImport ("__Internal")]
@@ -90,7 +162,13 @@ public static class StoreKit {
 	private static extern void _StoreKitRequestProductPriceString(string[] productIdentifiers);
 	[DllImport ("__Internal")]
 	private static extern void _StoreKitRequestProductLocalizedPriceString(string[] productIdentifiers);
-
+	
 	#endif
+	
+	//////////////////////////////////////////////////////////////////////////
+	// Callbacks from iOS plugin
+	//////////////////////////////////////////////////////////////////////////
+	
+	
 }
 
