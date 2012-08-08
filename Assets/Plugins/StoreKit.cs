@@ -26,7 +26,7 @@ public static class StoreKit {
 		}
 	}
 	
-	static string GetPrefKey(string productName) {
+	private static string GetPrefKey(string productName) {
 		return productIdPrefix_ + "." + productName;
 	}
 	
@@ -61,7 +61,21 @@ public static class StoreKit {
 			PlayerPrefs.SetInt(id, PlayerPrefs.GetInt(id) + 1);
 		#endif
 	}
-		
+	
+	public static void RequestProductPriceString(string[] productIdentifiers) {
+		#if UNITY_IPHONE && !UNITY_EDITOR
+			_StoreKitRequestProductPriceString(productIdentifiers);
+		#else
+		#endif
+	}
+	
+	public static void RequestProductPriceLocalizedString(string[] productIdentifiers) {
+		#if UNITY_IPHONE && !UNITY_EDITOR
+			_StoreKitRequestProductPriceLocalizedString(productIdentifiers);
+		#else
+		#endif
+	}
+	
 	#if UNITY_IPHONE
 
 	[DllImport ("__Internal")]
@@ -72,6 +86,10 @@ public static class StoreKit {
 	private static extern void _StoreKitBuy(string productName);
 	[DllImport ("__Internal")]
 	private static extern bool _StoreKitIsProcessing();
+	[DllImport ("__Internal")]
+	private static extern void _StoreKitRequestProductPriceString(string[] productIdentifiers);
+	[DllImport ("__Internal")]
+	private static extern void _StoreKitRequestProductLocalizedPriceString(string[] productIdentifiers);
 
 	#endif
 }
