@@ -1,5 +1,7 @@
 using UnityEngine;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 
@@ -29,6 +31,13 @@ public class StoreKit : MonoBehaviour
 	//////////////////////////////////////////////////////////////////////////
 	// Properties
 	//////////////////////////////////////////////////////////////////////////
+	
+	// parameter = productIdentifier
+	public Action<string> handlerBuyFinished { get; set; }
+	// parameter = productIdentifier
+	public Action<string> handlerBuyFailed { get; set; }
+	// parameter = a dictionary <productIdentifier, priceString>
+	public Action<Dictionary<string, string>> handlerRequestProductPriceFinished { get; set; }
 	
 	public bool isAvailable
 	{
@@ -169,6 +178,38 @@ public class StoreKit : MonoBehaviour
 	// Callbacks from iOS plugin
 	//////////////////////////////////////////////////////////////////////////
 	
+	private void BuyFinished(string productIdentifier)
+	{
+		if (handlerBuyFinished != null) {
+			handlerBuyFinished(productIdentifier);
+		}
+	}
 	
+	private void BuyFailed(string productIdentifier)
+	{
+		if (handlerBuyFailed != null) {
+			handlerBuyFailed(productIdentifier);
+		}
+	}
+	
+	private void RequestProductPriceFinished(string productPriceInfoString)
+	{
+		// The format of the productPriceInfoString should be like this
+		//
+		//     productIdentifier:priceString|productIdentifier:priceString|productIdentifier:priceString
+		//
+		if (handlerRequestProductPriceFinished != null) {
+			Dictionary<string, string> priceInfo = new Dictionary<string, string>();
+			if (!string.IsNullOrEmpty(productPriceInfoString)) {
+				string[] entryStrings = productPriceInfoString.Split(new char[]{'|'});
+				foreach(string entryString in entryStrings) {
+					string[] keyAndValue = entryString.Split(new char[]{':'});
+					if (keyAndValue.Length == 2) {
+						priceInfo.Add(keyAndValue[0], keyAndValue[1]);
+					}
+				}
+			}
+			handlerRequestProductPriceFinished(priceInfo);
+		}
+	}
 }
-
