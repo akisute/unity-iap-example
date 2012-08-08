@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using System.Runtime.InteropServices;
 
 
@@ -138,6 +139,7 @@ public class StoreKit : MonoBehaviour
 			receiptBase64Strings = (string[])buffer.ToArray(typeof(string));
 			PlayerPrefs.SetString(GetReceiptsPrefsKey(productIdentifier), string.Join(",", receiptBase64Strings));
 			PlayerPrefs.Save();
+			BuyFinished(productIdentifier);
 		#endif
 	}
 	
@@ -146,6 +148,14 @@ public class StoreKit : MonoBehaviour
 		#if UNITY_IPHONE && !UNITY_EDITOR
 			_StoreKitRequestProductPriceString(productIdentifiers);
 		#else
+			StringBuilder buffer = new StringBuilder();
+			foreach (string productIdentifier in productIdentifiers) {
+				if (buffer.Length > 0) {
+					buffer.Append("|");
+				}
+				buffer.AppendFormat("{0}:{1}", productIdentifier, "85");
+			}
+			RequestProductPriceFinished(buffer.ToString());
 		#endif
 	}
 	
@@ -154,6 +164,14 @@ public class StoreKit : MonoBehaviour
 		#if UNITY_IPHONE && !UNITY_EDITOR
 			_StoreKitRequestProductPriceLocalizedString(productIdentifiers);
 		#else
+			StringBuilder buffer = new StringBuilder();
+			foreach (string productIdentifier in productIdentifiers) {
+				if (buffer.Length > 0) {
+					buffer.Append("|");
+				}
+				buffer.AppendFormat("{0}:{1}", productIdentifier, "85‰~");
+			}
+			RequestProductPriceFinished(buffer.ToString());
 		#endif
 	}
 	

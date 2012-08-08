@@ -1,34 +1,50 @@
+import System.Collections.Generic;
+
 var skin : GUISkin;
 var fontLoRes : Font;
 var fontHiRes : Font;
+var productInfo : Dictionary.<String, String>;
 
 function Start() {
 	skin = Instantiate(skin) as GUISkin;
 	skin.font = Screen.width < 500 ? fontLoRes : fontHiRes;
 	
-	StoreKit.GetInstance().Install();
-}
-
-function Update() {
-	/*
-	var coin = SecureData.GetInt("Coin");
-	if (StoreKit.ConsumeProduct("coin1")) {
-		SecureData.SetInt("Coin", coin + 1000);
-		SecureData.Flush();
-	} else if (StoreKit.ConsumeProduct("coin2")) {
-		SecureData.SetInt("Coin", coin + 2500);
-		SecureData.Flush();
-	} else if (StoreKit.ConsumeProduct("coin3")) {
-		SecureData.SetInt("Coin", coin + 4000);
-		SecureData.Flush();
-	} else if (StoreKit.ConsumeProduct("levelx")) {
-		SecureData.SetBool("UnlockLevelX", true);
-		SecureData.Flush();
-	} else if (StoreKit.ConsumeProduct("levely")) {
-		SecureData.SetBool("UnlockLevelY", true);
-		SecureData.Flush();
-	}
-	*/
+	var store : StoreKit = StoreKit.GetInstance();
+	store.Install();
+	store.handlerBuyFinished = function(productIdentifier : String) {
+		Debug.Log("Buy Finished: " + productIdentifier);
+		var coin = SecureData.GetInt("Coin");
+		if (store.ConsumeFirstProductReceipt("net.appbankgames.dungeonsandgolf.ticket.tier1")) {
+			SecureData.SetInt("Coin", coin + 1000);
+			SecureData.Flush();
+		} else if (store.ConsumeFirstProductReceipt("net.appbankgames.dungeonsandgolf.ticket.tier2")) {
+			SecureData.SetInt("Coin", coin + 2500);
+			SecureData.Flush();
+		} else if (store.ConsumeFirstProductReceipt("net.appbankgames.dungeonsandgolf.ticket.tier3")) {
+			SecureData.SetInt("Coin", coin + 4000);
+			SecureData.Flush();
+		} else if (store.ConsumeFirstProductReceipt("net.appbankgames.dungeonsandgolf.ticket.tier4")) {
+			SecureData.SetBool("UnlockLevelX", true);
+			SecureData.Flush();
+		} else if (store.ConsumeFirstProductReceipt("net.appbankgames.dungeonsandgolf.ticket.tier5")) {
+			SecureData.SetBool("UnlockLevelY", true);
+			SecureData.Flush();
+		}
+	};
+	store.handlerBuyFailed = function(productIdentifier : String) {
+		Debug.Log("Buy Failed: " + productIdentifier);
+	};
+	store.handlerRequestProductPriceFinished = function(productInfo : Dictionary.<String, String>) {
+		Debug.Log("Request product price Finished");
+		this.productInfo = productInfo;
+	};
+	store.RequestProductPriceString([
+		"net.appbankgames.dungeonsandgolf.ticket.tier1",
+		"net.appbankgames.dungeonsandgolf.ticket.tier2",
+		"net.appbankgames.dungeonsandgolf.ticket.tier3",
+		"net.appbankgames.dungeonsandgolf.ticket.tier4",
+		"net.appbankgames.dungeonsandgolf.ticket.tier5"
+	]);
 }
 
 function OnGUI() {
@@ -62,16 +78,34 @@ function OnGUI() {
 
 	GUILayout.Label("Buy coins:");
 
-	if (GUILayout.Button("1,000 coin pack") && !deactivated) {
+	var titleCoin1000 : String = null;
+	if (productInfo != null && productInfo.ContainsKey("net.appbankgames.dungeonsandgolf.ticket.tier1")) {
+		titleCoin1000 = String.Format("1,000 coin pack - {0}", productInfo["net.appbankgames.dungeonsandgolf.ticket.tier1"]);
+	} else {
+		titleCoin1000 = "1,000 coin pack";
+	}
+	if (GUILayout.Button(titleCoin1000) && !deactivated) {
 		StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier1");
 	}
 
-	if (GUILayout.Button("2,500 coin pack") && !deactivated) {
-		StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier1");
+	var titleCoin2500 : String = null;
+	if (productInfo != null && productInfo.ContainsKey("net.appbankgames.dungeonsandgolf.ticket.tier2")) {
+		titleCoin2500 = String.Format("2,500 coin pack - {0}", productInfo["net.appbankgames.dungeonsandgolf.ticket.tier2"]);
+	} else {
+		titleCoin2500 = "2,500 coin pack";
+	}
+	if (GUILayout.Button(titleCoin2500) && !deactivated) {
+		StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier2");
 	}
 	
-	if (GUILayout.Button("4,000 coin pack") && !deactivated) {
-		StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier1");
+	var titleCoin4000 : String = null;
+	if (productInfo != null && productInfo.ContainsKey("net.appbankgames.dungeonsandgolf.ticket.tier3")) {
+		titleCoin4000 = String.Format("4,000 coin pack - {0}", productInfo["net.appbankgames.dungeonsandgolf.ticket.tier3"]);
+	} else {
+		titleCoin4000 = "4,000 coin pack";
+	}
+	if (GUILayout.Button(titleCoin4000) && !deactivated) {
+		StoreKit.GetInstance().Buy("net.appbankgames.dungeonsandgolf.ticket.tier3");
 	}
 	
 	if (!levelX || !levelY) {
