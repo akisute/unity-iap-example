@@ -13,6 +13,7 @@ function Start() {
 	store.Install();
 	store.handlerBuyFinished = function(productIdentifier : String) {
 		Debug.Log("Buy Finished: " + productIdentifier);
+		Debug.Log("Receipt Base64 Data: " + store.GetFirstProductReceipt(productIdentifier));
 		var coin = SecureData.GetInt("Coin");
 		if (store.ConsumeFirstProductReceipt("net.appbankgames.dungeonsandgolf.ticket.tier1")) {
 			SecureData.SetInt("Coin", coin + 1000);
@@ -38,7 +39,8 @@ function Start() {
 		Debug.Log("Request product price Finished");
 		this.productInfo = productInfo;
 	};
-	store.RequestProductPriceString([
+	//store.RequestProductPriceString([
+	store.RequestProductPriceLocalizedString([
 		"net.appbankgames.dungeonsandgolf.ticket.tier1",
 		"net.appbankgames.dungeonsandgolf.ticket.tier2",
 		"net.appbankgames.dungeonsandgolf.ticket.tier3",
