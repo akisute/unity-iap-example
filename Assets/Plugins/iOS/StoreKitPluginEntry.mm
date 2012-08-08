@@ -58,10 +58,12 @@ extern "C" void _StoreKitBuy(const char *productIdentifier)
 
 extern "C" void _StoreKitRequestProductPriceString(const char **productIdentifiers)
 {
-    
+    NSArray *array = _StoreKitNSArrayFromStringArray(productIdentifiers);
+    [client startRequestWithProductIdentifiers:array resultFormat:IAPProductsRequestResultFormatDefault];
 }
 
 extern "C" void _StoreKitRequestProductLocalizedPriceString(const char **productIdentifiers)
 {
-    
+    NSArray *array = _StoreKitNSArrayFromStringArray(productIdentifiers);
+    [client startRequestWithProductIdentifiers:array resultFormat:IAPProductsRequestResultFormatLocalized];
 }

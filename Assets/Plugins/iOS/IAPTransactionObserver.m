@@ -1,6 +1,19 @@
 #import "IAPTransactionObserver.h"
 #import "NSData-Base64.h"
 
+
+#pragma mark - Utility Function
+
+
+extern void UnitySendMessage(const char *, const char *, const char *);
+
+#define UnityStringFromNSString( _x_ ) ( _x_ != NULL && [_x_ isKindOfClass:[NSString class]] ) ? strdup( [_x_ UTF8String] ) : NULL
+#define NSStringFromUnityString( _x_ ) ( _x_ != NULL ) ? [[NSString alloc] initWithCString:_x_ encoding:NSUTF8StringEncoding] : [NSString stringWithUTF8String:""]
+
+
+#pragma mark -
+
+
 @implementation IAPTransactionObserver
 
 @synthesize available = availability_;
@@ -56,22 +69,24 @@
             NSLog(@"Purchased - %@", transaction.payment.productIdentifier);
             [self storeTransaction:transaction];
             [queue finishTransaction:transaction];
-            // TODO: SendMessage
+            UnitySendMessage(UnityStringFromNSString(@"StoreKit"),
+                             UnityStringFromNSString(@"BuyFinished"),
+                             UnityStringFromNSString(transaction.payment.productIdentifier));
         } else if (transaction.transactionState == SKPaymentTransactionStateFailed) {
             // Failed.
             NSLog(@"Failed - %@ (%@)", transaction.payment.productIdentifier, transaction.error);
-            // TODO: remove this alert
-            if (transaction.error.code != SKErrorPaymentCancelled) {
-                [[[UIAlertView alloc] initWithTitle:@"Payment Error" message:transaction.error.localizedDescription delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
-            }
             [queue finishTransaction:transaction];
-            // TODO: SendMessage
+            UnitySendMessage(UnityStringFromNSString(@"StoreKit"),
+                             UnityStringFromNSString(@"BuyFailed"),
+                             UnityStringFromNSString(transaction.payment.productIdentifier));
         } else if (transaction.transactionState == SKPaymentTransactionStateRestored) {
             // Restored.
             NSLog(@"Restored - %@", transaction.payment.productIdentifier);
             [self storeTransaction:transaction];
             [queue finishTransaction:transaction];
-            // TODO: SendMessage
+            UnitySendMessage(UnityStringFromNSString(@"StoreKit"),
+                             UnityStringFromNSString(@"BuyFinished"),
+                             UnityStringFromNSString(transaction.payment.productIdentifier));
         }
     }
 }
