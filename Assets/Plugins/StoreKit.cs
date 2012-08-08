@@ -130,7 +130,7 @@ public class StoreKit : MonoBehaviour
 	public void Buy(string productIdentifier)
 	{
 		#if UNITY_IPHONE && !UNITY_EDITOR
-			_StoreKitBuy(productName);
+			_StoreKitBuy(productIdentifier);
 		#else
 			const string DummyReceiptBase64String = "thisisdummyreceiptbase64string";
 			string[] receiptBase64Strings = GetProductReceipts(productIdentifier);
@@ -162,7 +162,7 @@ public class StoreKit : MonoBehaviour
 	public void RequestProductPriceLocalizedString(string[] productIdentifiers)
 	{
 		#if UNITY_IPHONE && !UNITY_EDITOR
-			_StoreKitRequestProductPriceLocalizedString(productIdentifiers);
+			_StoreKitRequestProductLocalizedPriceString(productIdentifiers);
 		#else
 			StringBuilder buffer = new StringBuilder();
 			foreach (string productIdentifier in productIdentifiers) {
