@@ -21,8 +21,14 @@ extern void UnitySendMessage(const char *, const char *, const char *);
 
 @implementation IAPProductsRequestClient
 
+@synthesize request = _request;
+@synthesize requestingProductIdentifiers = _requestingProductIdentifiers;
+@synthesize resultFormat = _resultFormat;
+
 - (void)dealloc
 {
+    self.request.delegate = nil;
+    self.request = nil;
     self.requestingProductIdentifiers = nil;
     [super dealloc];
 }
@@ -71,9 +77,9 @@ extern void UnitySendMessage(const char *, const char *, const char *);
     UnitySendMessage(UnityStringFromNSString(@"StoreKit"),
                      UnityStringFromNSString(@"RequestProductPriceFinished"),
                      UnityStringFromNSString(buffer));
-    self.requestingProductIdentifiers = nil;
     self.request.delegate = nil;
     self.request = nil;
+    self.requestingProductIdentifiers = nil;
 }
 
 @end
